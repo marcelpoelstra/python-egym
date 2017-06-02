@@ -6,7 +6,12 @@ class Api(object):
     def __init__(self,
             user=None,
             password=None,
-            token=None):
-        pass
+            token=None,
+            base_url=None):
+        if base_url is None:
+            self.base_url = 'https://www.'
+        else:
+            self.base_url = base_url
 
-
+    def GetUserActivities(self):
+        return "Bla"
