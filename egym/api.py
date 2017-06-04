@@ -32,11 +32,18 @@ class Api(object):
         self.token = res.json()['accessToken']
         self.userid = res.json()['userId']
 
-    def GetUserSessions(self):
+    def GetUserSessions(self, start, end):
         endpoint = 'user/sessions'
         headers = self.buildHeaders()
         res = requests.get(url=self.base_url+endpoint,
-                            json={'start': '1494201600000', 'end': '1494201600000'},
+                            params={'start': start, 'end': end},
+                            headers=headers)
+        return res.json()
+
+    def GetSessionsData(self, date):
+        endpoint = 'user/sessions/{}'.format(date)
+        headers = self.buildHeaders()
+        res = requests.get(url=self.base_url+endpoint,
                             headers=headers)
         return res.json()
 
