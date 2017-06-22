@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 import requests
+from datetime import date
+from datetime import datetime
 
 class Api(object):
     """A python interface into the eGym API"""
@@ -38,13 +40,17 @@ class Api(object):
         res = requests.get(url=self.base_url+endpoint,
                             params={'start': start, 'end': end},
                             headers=headers)
-        return res.json()
+        dates = []
+        for s in res.json():
+            dates.append(datetime.strptime(s, "%Y-%m-%d").date())
+        return dates
 
-    def GetSessionsData(self, date):
+    def GetSessionData(self, date):
         endpoint = 'user/sessions/{}'.format(date)
         headers = self.buildHeaders()
         res = requests.get(url=self.base_url+endpoint,
                             headers=headers)
+        return [Session.NewFromJsonDict(x) for x in data]
         return res.json()
 
     def GetUserDashboard(self):
