@@ -3,6 +3,10 @@
 import requests
 from datetime import date
 from datetime import datetime
+from egym import (
+    Session,
+    Exercise,
+)
 
 class Api(object):
     """A python interface into the eGym API"""
