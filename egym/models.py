@@ -71,6 +71,9 @@ class Session(EgymModel):
                 ex.append(Exercise.NewFromJsonDict(e))
             self.exercises = ex
 
+    def getExercises(self):
+        return self.exercises
+
 class Exercise(EgymModel):
 
     def __init__(self, **kwargs):
@@ -94,6 +97,9 @@ class Exercise(EgymModel):
                 sets.append(Set.NewFromJsonDict(e))
             self.sets = sets
 
+    def getSets(self):
+        return self.sets
+
 class Set(EgymModel):
                
     def __init__(self, **kwargs):
@@ -103,3 +109,9 @@ class Set(EgymModel):
         }
         for (param, default) in self.param_defaults.items():
             setattr(self, param, kwargs.get(param, default))
+
+    def getWeight(self):
+        return int(self.weight)
+
+    def getReps(self):
+        return int(self.numberOfReps)
