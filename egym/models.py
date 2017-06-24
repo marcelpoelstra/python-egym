@@ -60,7 +60,8 @@ class Session(EgymModel):
     def __init__(self, **kwargs):
         self.param_defaults = {
             'sessionIsoDate': None, 
-            'exercises': None
+            'exercises': None,
+            'points': None,
         }
         for (param, default) in self.param_defaults.items():
             setattr(self, param, kwargs.get(param, default))
@@ -71,8 +72,14 @@ class Session(EgymModel):
                 ex.append(Exercise.NewFromJsonDict(e))
             self.exercises = ex
 
+    def getIsoDate(self):
+        return self.sessionIsoDate
+
     def getExercises(self):
         return self.exercises
+
+    def getPoints(self):
+        return int(self.points)
 
 class Exercise(EgymModel):
 
@@ -96,6 +103,9 @@ class Exercise(EgymModel):
             for e in kwargs.get('sets'):
                 sets.append(Set.NewFromJsonDict(e))
             self.sets = sets
+
+    def getEgymCircleExercises(self):
+        return self.eGymCircleExercises
 
     def getSets(self):
         return self.sets

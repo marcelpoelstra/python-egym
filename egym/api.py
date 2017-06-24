@@ -55,7 +55,6 @@ class Api(object):
         res = requests.get(url=self.base_url+endpoint,
                             headers=headers)
         data = res.json()
-        print(data)
         session = Session.NewFromJsonDict(res.json())
         return session
 
