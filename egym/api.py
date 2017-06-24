@@ -54,8 +54,10 @@ class Api(object):
         headers = self.buildHeaders()
         res = requests.get(url=self.base_url+endpoint,
                             headers=headers)
-        return [Session.NewFromJsonDict(x) for x in data]
-        return res.json()
+        data = res.json()
+        print(data)
+        session = Session.NewFromJsonDict(res.json())
+        return session
 
     def GetUserDashboard(self):
         endpoint = 'user/dashboard'
