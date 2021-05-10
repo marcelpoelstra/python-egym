@@ -6,6 +6,7 @@ from datetime import datetime
 from egym import (
     Session,
     Exercise,
+    Set
 )
 
 class Api(object):
@@ -18,7 +19,7 @@ class Api(object):
             token=None,
             base_url=None):
         if base_url is None:
-            self.base_url = 'https://www.egym.de/egym-rest/mobile/v2/'
+            self.base_url = 'https://www.egym.de/egym-rest/mobile/'
         else:
             self.base_url = base_url
 
@@ -30,7 +31,7 @@ class Api(object):
             self.token = token
 
     def GetUserLogin(self):
-        endpoint = 'auth/login'
+        endpoint = 'v2/auth/login'
         headers = self.buildHeaders()
         res = requests.post(url=self.base_url+endpoint,
                             json={'email': self.email, 'password': self.password},
@@ -39,7 +40,7 @@ class Api(object):
         self.userid = res.json()['userId']
 
     def GetUserSessions(self, start, end):
-        endpoint = 'user/sessions'
+        endpoint = 'v2/user/sessions'
         headers = self.buildHeaders()
         res = requests.get(url=self.base_url+endpoint,
                             params={'start': start, 'end': end},
@@ -50,7 +51,7 @@ class Api(object):
         return dates
 
     def GetSessionData(self, date):
-        endpoint = 'user/sessions/{}'.format(date)
+        endpoint = 'v2/user/sessions/{}'.format(date)
         headers = self.buildHeaders()
         res = requests.get(url=self.base_url+endpoint,
                             headers=headers)
@@ -59,14 +60,35 @@ class Api(object):
         return session
 
     def GetUserDashboard(self):
-        endpoint = 'user/dashboard'
+        endpoint = 'v2/user/dashboard'
         headers = self.buildHeaders()
         res = requests.get(url=self.base_url+endpoint,
                             headers=headers)
         return res.json()
 
     def GetUserProfile(self):
-        endpoint = 'user/profile'
+        endpoint = 'v2/user/profile'
+        headers = self.buildHeaders()
+        res = requests.get(url=self.base_url+endpoint,
+                            headers=headers)
+        return res.json()
+
+    def GetMuscleAnalysis(self):
+        endpoint= 'v2/user/analysis/muscle-analysis'
+        headers = self.buildHeaders()
+        res = requests.get(url=self.base_url+endpoint,
+                            headers=headers)
+        return res.json()
+
+    def GetBioAge(self):
+        endpoint= 'v2/user/analysis/bioage'
+        headers = self.buildHeaders()
+        res = requests.get(url=self.base_url+endpoint,
+                            headers=headers)
+        return res.json()
+
+    def GetMaxForce(self):
+        endpoint= 'v3/user/analysis/maxforce/'
         headers = self.buildHeaders()
         res = requests.get(url=self.base_url+endpoint,
                             headers=headers)

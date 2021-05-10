@@ -1,6 +1,7 @@
 from .models import (
     Session,
     Exercise,
+    Set,
 )
 
 

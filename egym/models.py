@@ -59,9 +59,11 @@ class Session(EgymModel):
 
     def __init__(self, **kwargs):
         self.param_defaults = {
-            'sessionIsoDate': None, 
-            'exercises': None,
-            'points': None,
+            'template': 0,
+            'sessionDate': 0,
+            'sessionIsoDate': 0, 
+            'exercises': [],
+            'points': 0,
         }
         for (param, default) in self.param_defaults.items():
             setattr(self, param, kwargs.get(param, default))
@@ -70,8 +72,14 @@ class Session(EgymModel):
             ex = []
             for e in kwargs.get('exercises'):
                 ex.append(Exercise.NewFromJsonDict(e))
-            self.exercises = ex
+            self.exercises = ex 
 
+    def getTemplate(self):
+        return self.getTemplate
+
+    def getSessionDate(self):
+        return self.sessionDate
+    
     def getIsoDate(self):
         return self.sessionIsoDate
 
@@ -79,24 +87,27 @@ class Session(EgymModel):
         return self.exercises
 
     def getPoints(self):
-        return int(self.points)
+        return self.points
 
 class Exercise(EgymModel):
 
     def __init__(self, **kwargs):
         self.param_defaults = {
-            'exerciseId': None,
-            'eGymCircleExercises': None,
-            'done': None,
-            'sets': None, 
+            'exerciseType': 0,
+            'uniqueExerciseClientId': 0,
+            'exerciseId': 0,
+            'generalExerciseId': 0,
+            'duration': 0,
+            'targetSpeed': 0,
+            'distance': 0,
+            'sets': [], 
+            'done': 0,
+            'dataSource': 0,
+            'points': 0,
+            'created': 0,
         }
         for (param, default) in self.param_defaults.items():
             setattr(self, param, kwargs.get(param, default))
-        if 'eGymCircleExercises' in kwargs:
-            ex = []
-            for e in kwargs.get('eGymCircleExercises'):
-                ex.append(Exercise.NewFromJsonDict(e))
-            self.eGymCircleExercises = ex
         
         if 'sets' in kwargs:
             sets = []
@@ -104,8 +115,38 @@ class Exercise(EgymModel):
                 sets.append(Set.NewFromJsonDict(e))
             self.sets = sets
 
-    def getEgymCircleExercises(self):
-        return self.eGymCircleExercises
+    def getExerciseType(self):
+        return self.exerciseType
+
+    def getUniqueExerciseClientId(self):
+        return self.uniqueExerciseClientId
+
+    def getExerciseId(self):
+        return self.exerciseId
+
+    def getGeneralExerciseId(self):
+        return self.generalExerciseId
+
+    def getDuration(self):
+        return self.duration
+    
+    def getTargetSpeed(self):
+        return int(self.targetSpeed)
+    
+    def getDistance(self):
+        return self.distance
+
+    def getDone(self):
+        return self.done
+
+    def getDataSource(self):
+        return self.dataSource
+
+    def getExPoints(self):
+        return self.points
+
+    def getCreated(self):
+        return self.created
 
     def getSets(self):
         return self.sets
@@ -114,14 +155,18 @@ class Set(EgymModel):
                
     def __init__(self, **kwargs):
         self.param_defaults = {
-            "numberOfReps": None,
-            "weight": None,
+            "setType": 0,
+            "numberOfReps": 0,
+            "weight": 0,
         }
         for (param, default) in self.param_defaults.items():
             setattr(self, param, kwargs.get(param, default))
 
+    def getSetType(self):
+        return self.setType
+
     def getWeight(self):
-        return int(self.weight)
+        return self.weight
 
     def getReps(self):
-        return int(self.numberOfReps)
+        return self.numberOfReps
