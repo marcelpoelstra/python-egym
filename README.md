@@ -5,13 +5,33 @@ This project is forked from the apparently dormant (2017) project bitstacker/pyt
 I added new functions by sniffing the 2021 IOS e-gym app, and updated models.py and api.py accordingly.
 Also fixed some minor issues in the models.
 
+Tested on Ubuntu 20.10 and MacOS 11.3
+
+
+To install and use :
+
+- Check out this repository
+
+- cd into the dir :  
+
+ ```bash
+ cd python-egym
+ ```
+- build using make :
+
+``` bash
+make
+
+```
+- install using pip :
+
+``` bash
+pip install -e .
+```
 
 
 
-This api interface is inspired by python-twitter (https://github.com/bear/python-twitter).
-If some api functions are missing, you are free to fork this project.
-
-## How it works
+## Example for use in your Python app:
 
 ```python
 import egym
