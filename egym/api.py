@@ -87,8 +87,29 @@ class Api(object):
                             headers=headers)
         return res.json()
 
+    def GetBodyData(self):
+        endpoint= 'v2/user/analysis/bodydata'
+        headers = self.buildHeaders()
+        res = requests.get(url=self.base_url+endpoint,
+                            headers=headers)
+        return res.json()
+
     def GetMaxForce(self):
         endpoint= 'v3/user/analysis/maxforce/'
+        headers = self.buildHeaders()
+        res = requests.get(url=self.base_url+endpoint,
+                            headers=headers)
+        return res.json()
+
+    def GetRanking(self):
+        endpoint= 'v2/user/ranking/gym'
+        headers = self.buildHeaders()
+        res = requests.get(url=self.base_url+endpoint,
+                            headers=headers)
+        return res.json()
+
+    def GetFriends(self):
+        endpoint= 'v2/user/ranking/fitnessteam'
         headers = self.buildHeaders()
         res = requests.get(url=self.base_url+endpoint,
                             headers=headers)
