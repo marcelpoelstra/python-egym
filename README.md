@@ -1,5 +1,5 @@
 # python-egym
-A python interface into the eGym API
+A python interface into the eGym API (www.egym.de)
 
 This project is forked from the apparently dormant (2017) project bitstacker/python-egym
 I added new functions by sniffing the 2021 IOS e-gym app, and updated models.py and api.py accordingly.
