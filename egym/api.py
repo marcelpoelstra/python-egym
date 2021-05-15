@@ -95,7 +95,7 @@ class Api(object):
         return res.json()
 
     def GetMaxForce(self):
-        endpoint= 'v3/user/analysis/maxforce/'
+        endpoint= 'v3/user/analysis/maxforce/?limit=500'
         headers = self.buildHeaders()
         res = requests.get(url=self.base_url+endpoint,
                             headers=headers)
