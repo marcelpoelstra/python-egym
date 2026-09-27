@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "python-egym"
+version = "2.0"
+description = "A python interface for the egym api"
+authors = [{ name = "Marcel Poelstra", email = "marcel@marcelpoelstra.nl" }]
+keywords = ["egym", "api"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX :: Linux",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Programming Language :: Python :: 3",
+]
+requires-python = ">=3.10"
+dependencies = ["requests"]
+
+[project.optional-dependencies]
+test = ["pytest", "responses"]
+
+[tool.setuptools]
+packages = ["egym"]
+platforms = ["Linux", "macOS"]
