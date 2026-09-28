@@ -11,6 +11,10 @@ DISCOVERY_URL = "https://one.netpulse.com"
 MOBILE_API_URL = "https://mobile-api.int.api.egym.com"
 MWA_API_URL = "https://mwa-api.int.api.egym.com/mwa/api"
 NP_API_VERSION = "1.5"
+IOS_VERSION = "27.0.0"
+ALAMOFIRE_VERSION = "5.9.1"
+CFNETWORK_VERSION = "3896.100.1.2.1"
+DARWIN_VERSION = "27.0.0"
 
 
 def _is_success(response):
@@ -25,9 +29,10 @@ class Connection:
         self._password = password
         self._timeout = timeout
         self._http = requests.Session()
-        device_uid = str(uuid.uuid4()).upper()
+        device_uid = str(uuid.uuid5(uuid.NAMESPACE_DNS, email)).upper()
         self._identity = {
-            "Accept": "application/json",
+            "Accept": "application/json,text/plain",
+            "Accept-Encoding": "br;q=1.0, gzip;q=0.9, deflate;q=0.8",
             "Accept-Language": locale,
             "X-NP-API-Version": NP_API_VERSION,
             "X-NP-APP-Version": app_version,
@@ -38,8 +43,14 @@ class Connection:
             ),
             "User-Agent": (
                 f"NetpulseFitness/{app_version} (com.netpulse.netpulsefitness; "
-                f"build:{app_build}; iOS 27.0.0) Alamofire/5.9.1"
+                f"build:{app_build}; iOS {IOS_VERSION}) Alamofire/{ALAMOFIRE_VERSION}"
             ),
+        }
+        self._mwa_identity = {
+            "Accept": "*/*",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Accept-Language": locale,
+            "User-Agent": f"EGYM%20Fitness/{app_build} CFNetwork/{CFNETWORK_VERSION} Darwin/{DARWIN_VERSION}",
         }
         self._token = None
         self._token_expires_at = None
@@ -71,7 +82,7 @@ class Connection:
         branding_url = next((item.get("url") for item in resources if item.get("key") == "Branding.plist"), None)
         if not branding_url:
             raise DiscoveryError("Brand configuration lists no Branding.plist")
-        branding = self._send("GET", branding_url)
+        branding = self._send("GET", branding_url, headers=self._mwa_identity)
         if not _is_success(branding):
             raise DiscoveryError(f"Branding.plist download failed with status {branding.status_code}")
         try:
@@ -95,7 +106,7 @@ class Connection:
         response = self._send(
             "POST",
             f"{self.base_url}/np/exerciser/login",
-            headers=self._identity,
+            headers={**self._identity, "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"},
             data={"username": self._email, "password": self._password},
         )
         if not _is_success(response):
@@ -143,15 +154,18 @@ class Connection:
 
     def _mwa_get(self, path, params):
         url = f"{MWA_API_URL}{path}"
-        response = self._send("GET", url, headers=self._bearer(), params=params)
+        response = self._send("GET", url, headers=self._mwa_headers(), params=params)
         if response.status_code == 401:
             self._token = None
-            response = self._send("GET", url, headers=self._bearer(), params=params)
+            response = self._send("GET", url, headers=self._mwa_headers(), params=params)
             if response.status_code in (401, 403):
                 raise AuthenticationError(f"Still refused with a new token: {response.url}", response.status_code)
         if not _is_success(response):
             raise ApiError(response.status_code, response.url, response.text)
         return response
+
+    def _mwa_headers(self):
+        return {**self._mwa_identity, **self._bearer()}
 
     def _bearer(self):
         now = datetime.datetime.now(datetime.timezone.utc)

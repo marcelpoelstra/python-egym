@@ -38,7 +38,8 @@ LOGIN_BODY = {
     "egymAccountId": "account-1",
 }
 IDENTITY = {
-    "Accept": "application/json",
+    "Accept": "application/json,text/plain",
+    "Accept-Encoding": "br;q=1.0, gzip;q=0.9, deflate;q=0.8",
     "Accept-Language": "en-GB",
     "X-NP-API-Version": "1.5",
     "X-NP-APP-Version": "3.91",
@@ -49,6 +50,12 @@ IDENTITY = {
         r"containerName=NetpulseFitness;$"
     ),
     "User-Agent": "NetpulseFitness/3.91 (com.netpulse.netpulsefitness; build:1190; iOS 27.0.0) Alamofire/5.9.1",
+}
+MWA_IDENTITY = {
+    "Accept": "*/*",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Accept-Language": "en-GB",
+    "User-Agent": "EGYM%20Fitness/1190 CFNetwork/3896.100.1.2.1 Darwin/27.0.0",
 }
 
 
