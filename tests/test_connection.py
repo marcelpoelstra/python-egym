@@ -21,6 +21,7 @@ from fakes import (
     LOGIN_URL,
     MOBILE_API_URL,
     MWA_API_URL,
+    MWA_IDENTITY,
     PASSWORD,
     TOKEN_URL,
     USERS_BODY,
@@ -38,7 +39,9 @@ def test_login_sends_identity_and_form_and_stores_ids(mocked):
         LOGIN_URL,
         json=LOGIN_BODY,
         match=[
-            matchers.header_matcher(IDENTITY),
+            matchers.header_matcher(
+                {**IDENTITY, "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"}
+            ),
             matchers.urlencoded_params_matcher({"username": EMAIL, "password": PASSWORD}),
         ],
     )
@@ -161,7 +164,7 @@ def test_mobile_api_cookie_after_discovery(mocked):
     connection.get("mobile-api", "/analysis/api/thing")
 
 
-def test_mwa_get_sends_bearer_without_identity(mocked):
+def test_mwa_get_sends_bearer_and_webview_identity_without_np_headers(mocked):
     add_login(mocked)
     connection = make_connection()
     add_token(mocked)
@@ -169,10 +172,30 @@ def test_mwa_get_sends_bearer_without_identity(mocked):
         responses.GET,
         f"{MWA_API_URL}/thing",
         json=[1],
-        match=[matchers.header_matcher({"Authorization": "Bearer token-1"})],
+        match=[matchers.header_matcher({**MWA_IDENTITY, "Authorization": "Bearer token-1"})],
     )
     assert connection.get("mwa-api", "/thing") == [1]
     assert "X-NP-User-Agent" not in mocked.calls[-1].request.headers
+
+
+def test_device_uid_is_stable_per_account_and_differs_between_accounts(mocked):
+    add_login(mocked)
+    make_connection()
+    first = mocked.calls[-1].request.headers["X-NP-User-Agent"]
+    add_login(mocked)
+    make_connection()
+    assert mocked.calls[-1].request.headers["X-NP-User-Agent"] == first
+    mocked.add(
+        responses.POST,
+        LOGIN_URL,
+        json=LOGIN_BODY,
+        headers={"Set-Cookie": "JSESSIONID=session-1; Path=/; Secure; HttpOnly"},
+        match=[matchers.urlencoded_params_matcher({"username": "other@example.com", "password": PASSWORD})],
+    )
+    Connection(
+        "other@example.com", PASSWORD, base_url=BASE_URL, app_version="3.91", app_build="1190", locale="en-GB", timeout=30
+    )
+    assert mocked.calls[-1].request.headers["X-NP-User-Agent"] != first
 
 
 def test_token_reused_while_valid(mocked):
@@ -275,6 +298,21 @@ def test_other_status_raises_api_error(mocked):
     with pytest.raises(ApiError) as error:
         connection.get("netpulse", "/np/thing")
     assert (error.value.status_code, error.value.url, error.value.text) == (500, f"{BASE_URL}/np/thing", "boom")
+
+
+def test_brotli_encoded_response_is_decoded(mocked):
+    import brotli
+
+    add_login(mocked)
+    connection = make_connection()
+    mocked.add(
+        responses.GET,
+        f"{BASE_URL}/np/thing",
+        body=brotli.compress(b'{"a": 1}'),
+        headers={"Content-Encoding": "br"},
+        content_type="application/json",
+    )
+    assert connection.get("netpulse", "/np/thing") == {"a": 1}
 
 
 def test_non_json_success_propagates_requests_error(mocked):

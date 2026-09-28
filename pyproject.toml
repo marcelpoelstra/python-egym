@@ -17,7 +17,7 @@ classifiers = [
     "Programming Language :: Python :: 3",
 ]
 requires-python = ">=3.10"
-dependencies = ["requests"]
+dependencies = ["requests", "Brotli"]
 
 [project.optional-dependencies]
 test = ["pytest", "responses"]

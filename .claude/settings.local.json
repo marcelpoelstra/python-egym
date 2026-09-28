@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd /Users/marcel/python-egym && .venv/bin/python -m pytest *)",
+      "Bash(cd /Users/marcel/python-egym && EGYM_EMAIL=* EGYM_PASSWORD=* .venv/bin/python -m pytest *)"
+    ]
+  }
+}
