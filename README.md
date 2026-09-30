@@ -4,7 +4,7 @@ An unofficial, read-only Python connector for the member API behind the EGYM Fit
 
 It supports macOS and Linux, each on amd64 and arm64, with Python 3.10 or newer.
 
-Inspired by a retired version of python-egym by @bitstacker (2017). (original repo seems non-existant)
+This is version 2.0, refactored from an earlier (2021) improved version based on python-egym by (retired) by @bitstacker. (original repo seems non-existant)
 
 ## Installation
 
