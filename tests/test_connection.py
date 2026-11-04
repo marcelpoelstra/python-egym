@@ -258,6 +258,26 @@ def test_mwa_401_fetches_new_token_and_retries(mocked):
     assert connection.get("mwa-api", "/thing") == {"a": 1}
 
 
+def test_mwa_write_401_fetches_new_token_and_resends_body(mocked):
+    add_login(mocked)
+    connection = make_connection()
+    add_token(mocked, token="token-1")
+    add_token(mocked, token="token-2")
+    body = matchers.json_params_matcher({"name": "Push"})
+    mocked.add(
+        responses.POST,
+        f"{MWA_API_URL}/thing",
+        status=401,
+        match=[matchers.header_matcher({"Authorization": "Bearer token-1"}), body],
+    )
+    mocked.add(
+        responses.POST,
+        f"{MWA_API_URL}/thing",
+        match=[matchers.header_matcher({"Authorization": "Bearer token-2"}), body],
+    )
+    assert connection.mwa_write("POST", "/thing", body={"name": "Push"}) is None
+
+
 def test_token_call_403_logs_in_again(mocked):
     add_login(mocked, session_id="session-1")
     connection = make_connection()

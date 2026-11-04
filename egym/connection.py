@@ -125,7 +125,7 @@ class Connection:
 
     def get(self, server, path, params=None):
         if server == "mwa-api":
-            return self._mwa_get(path, params).json()
+            return self._mwa_send("GET", path, params).json()
         if server == "netpulse":
             url = f"{self.base_url}{path}"
         elif server == "mobile-api":
@@ -152,12 +152,15 @@ class Connection:
             headers["Cookie"] = f"JSESSIONID={session_id}"
         return self._send("GET", url, headers=headers, params=params)
 
-    def _mwa_get(self, path, params):
+    def mwa_write(self, method, path, params=None, body=None):
+        self._mwa_send(method, path, params, body)
+
+    def _mwa_send(self, method, path, params, body=None):
         url = f"{MWA_API_URL}{path}"
-        response = self._send("GET", url, headers=self._mwa_headers(), params=params)
+        response = self._send(method, url, headers=self._mwa_headers(), params=params, json=body)
         if response.status_code == 401:
             self._token = None
-            response = self._send("GET", url, headers=self._mwa_headers(), params=params)
+            response = self._send(method, url, headers=self._mwa_headers(), params=params, json=body)
             if response.status_code in (401, 403):
                 raise AuthenticationError(f"Still refused with a new token: {response.url}", response.status_code)
         if not _is_success(response):

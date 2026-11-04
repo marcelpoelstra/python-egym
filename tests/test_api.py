@@ -59,6 +59,12 @@ MWA_CASES = [
         "/workouts/v1.1/available-plans",
         {"gymLocationId": GYM_ID, "measurementSystem": "METRIC", "locale": "en-GB"},
     ),
+    (
+        lambda api: api.get_plan(42),
+        "/workouts/v1.0/plans/42",
+        {"gymLocationId": GYM_ID, "locale": "en-GB", "measurementSystem": "METRIC"},
+    ),
+    (lambda api: api.get_activities(), "/workouts/v1.0/activities", {"gymLocationId": GYM_ID, "locale": "en-GB"}),
     (lambda api: api.get_favourite_activities(), "/workouts/v2.0/favourite-activities", {"gymLocationId": GYM_ID}),
     (lambda api: api.get_bio_age(), "/analysis/v1.0/bio-age", {"locale": "en-GB"}),
     (
@@ -142,6 +148,48 @@ def test_mwa_methods(api, mocked, call, path, params):
         ],
     )
     assert call(api) == [{"ok": True}]
+
+
+PLAN_EXERCISES = [{"activityId": 95, "sets": [{"setType": "REP_BASED", "numberOfReps": 8, "weight": 12.0}]}]
+PLAN_BODY = {"name": "Push", "exercises": PLAN_EXERCISES}
+
+PLAN_WRITE_CASES = [
+    (
+        lambda api: api.create_personal_plan("Push", PLAN_EXERCISES),
+        responses.POST,
+        "/workouts/v1.0/personal-plans",
+        {"measurementSystem": "METRIC", "gymLocationId": GYM_ID},
+        PLAN_BODY,
+        200,
+    ),
+    (
+        lambda api: api.update_personal_plan(42, "Push", PLAN_EXERCISES),
+        responses.POST,
+        "/workouts/v1.0/personal-plans/42",
+        {"measurementSystem": "METRIC"},
+        PLAN_BODY,
+        200,
+    ),
+    (lambda api: api.delete_personal_plan(42), responses.DELETE, "/workouts/v1.0/personal-plans/42", {}, None, 204),
+]
+
+
+@pytest.mark.parametrize("call, method, path, params, body, status", PLAN_WRITE_CASES)
+def test_personal_plan_writes(api, mocked, call, method, path, params, body, status):
+    add_token(mocked)
+    match = [matchers.query_param_matcher(params), matchers.header_matcher({"Authorization": "Bearer token-1"})]
+    if body is not None:
+        match.append(matchers.json_params_matcher(body))
+    mocked.add(method, f"{MWA_API_URL}{path}", status=status, match=match)
+    assert call(api) is None
+
+
+def test_personal_plan_write_error_raises_api_error(api, mocked):
+    add_token(mocked)
+    mocked.add(responses.DELETE, f"{MWA_API_URL}/workouts/v1.0/personal-plans/42", status=404, body="missing")
+    with pytest.raises(egym.ApiError) as error:
+        api.delete_personal_plan(42)
+    assert error.value.status_code == 404
 
 
 def test_attributes(api):

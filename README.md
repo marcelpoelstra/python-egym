@@ -1,6 +1,6 @@
 # python-egym
 
-An unofficial, read-only Python connector for the member API behind the EGYM Fitness app. It is not affiliated with or endorsed by EGYM.
+An unofficial Python connector for the member API behind the EGYM Fitness app. It reads your data and can create, change and delete your own training plans; nothing else is written. It is not affiliated with or endorsed by EGYM.
 
 It supports macOS and Linux, each on amd64 and arm64, with Python 3.10 or newer.
 
@@ -40,7 +40,7 @@ print(api.get_bio_age())
 api.logout()
 ```
 
-The connector finds your gym from your email address, logs in, and renews the session and the access token by itself. Every method except `logout()` returns the API's JSON as plain Python lists and dictionaries.
+The connector finds your gym from your email address, logs in, and renews the session and the access token by itself. Every reading method returns the API's JSON as plain Python lists and dictionaries; `logout()` and the plan-writing methods return `None`.
 
 ### Options
 
@@ -63,7 +63,12 @@ The connector finds your gym from your email address, logs in, and renews the se
 | `get_gyms()` | Gyms of your gym brand |
 | `get_challenges()` | Challenges, grouped into joined and unjoined |
 | `get_workouts(start, end)` | Workouts with their exercises and sets, `end` included; long ranges are fetched in 30-day windows |
-| `get_available_plans()` | Training plans available at your gym |
+| `get_available_plans()` | Training plans available at your gym; your own have `type` `USER_TRAINING_PLAN`. Their sets can show the values last trained instead of the stored ones |
+| `get_plan(plan_id)` | One plan with its exercises (`plannedExercises`) and stored sets |
+| `create_personal_plan(name, exercises)` | Creates an own plan; the API returns no id, find it with `get_available_plans()` |
+| `update_personal_plan(plan_id, name, exercises)` | Replaces name and exercises of an own plan |
+| `delete_personal_plan(plan_id)` | Deletes an own plan |
+| `get_activities()` | Exercise catalogue of your gym, with each exercise's `activityId` |
 | `get_favourite_activities()` | Favourite activities |
 | `get_bio_age()` | Current bio age and its parts |
 | `get_bio_age_summary(period, shift=0, types=None)` | Bio age per month or year; `types` from `MUSCLE`, `METABOLIC`, `CARDIO`, `FLEXIBILITY`, all four by default |
@@ -78,6 +83,14 @@ The connector finds your gym from your email address, logs in, and renews the se
 | `get_activity_level()` | Activity level, points and goal |
 | `get_ranking(size=20)` | Your ranking and the leaderboard |
 | `logout()` | Ends the session |
+
+`exercises` is a list of `{"activityId": 95, "sets": [...]}`, where `activityId` comes from `get_activities()`. Each set needs `setType` (`REP_BASED` or `TIME_BASED`) and takes `numberOfReps`, `weight` (kg, or lb with `IMPERIAL`), `duration`, `recoveryTime` (both seconds), `distance`, `speed`, `incline`, `heartRate`, `sideMode` (`BOTH`, `LEFT`, `RIGHT`) and `trainingMethod`. The API refuses a strength exercise without `weight`, unless the exercise is body-weight based:
+
+```python
+api.create_personal_plan("Push", [
+    {"activityId": 95, "sets": [{"setType": "REP_BASED", "numberOfReps": 8, "weight": 22.0, "recoveryTime": 120}]},
+])
+```
 
 The attributes `base_url`, `exerciser_id` and `gym_id` show what the connector found at login.
 
@@ -117,4 +130,5 @@ EGYM does not document this API for members. The calls in this connector are bas
 - The OpenAPI specification that the mwa-api service publishes itself. It covers the workout, analysis and measurement calls, without descriptions.
 - [thegymgroup-api](https://github.com/luke0x90/thegymgroup-api), a third-party description of the Netpulse API behind white-label gym apps, for the Netpulse login and session.
 - Read-only tests against the live API, which also found that long date ranges need 30-day windows and long `types` lists need batches.
+- A live create, update and delete of a throwaway personal plan, which confirmed the plan-writing calls (October 2026).
 
