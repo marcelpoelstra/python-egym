@@ -104,6 +104,27 @@ MWA_CASES = [
         "/measurements/v1.0/cardio-measurements-yearly-summary",
         {"shift": 2, "zoneId": ZONE},
     ),
+    (lambda api: api.get_latest_flexibility_metrics(), "/measurements/v1.0/flexibility-latest-metrics", {}),
+    (
+        lambda api: api.get_latest_flexibility_metrics(TYPES),
+        "/measurements/v1.0/flexibility-latest-metrics",
+        {"types": TYPES},
+    ),
+    (
+        lambda api: api.get_flexibility_history(TYPES, START, END),
+        "/measurements/v1.0/flexibility-history",
+        {"types": TYPES, "granularity": "ONE_ITEM_PER_DAY", **DATES},
+    ),
+    (
+        lambda api: api.get_latest_squat_metrics(),
+        "/measurements/v1.0/squat-latest-metrics",
+        {"locale": "en-GB", "zoneId": ZONE},
+    ),
+    (
+        lambda api: api.get_squat_history(START, END),
+        "/measurements/v1.0/squat-history",
+        {"granularity": "ONE_ITEM_PER_DAY", "locale": "en-GB", **DATES},
+    ),
     (lambda api: api.get_strength_measurements(START, END), "/measurements/v1.0/strength", DATES),
     (
         lambda api: api.get_strength_measurements(START, END, activity_id=7),
@@ -280,6 +301,18 @@ def test_workouts_split_into_30_day_windows(api, mocked):
         )
     workouts = api.get_workouts(datetime.date(2026, 1, 1), datetime.date(2026, 3, 15))
     assert workouts == [{"window": 1}, {"window": 2}, {"window": 3}]
+
+
+def test_check_ins_sorted_oldest_first(api, mocked):
+    later = {"checkInDate": "2026-09-27T17:00:00", "duration": None}
+    earlier = {"checkInDate": "2026-09-21T09:30:00", "duration": None}
+    mocked.add(
+        responses.GET,
+        f"{BASE_URL}/np/exercisers/{EXERCISER_ID}/check-ins/history",
+        json={"checkIns": [later, earlier]},
+        match=[matchers.query_param_matcher({"startDate": "2026-09-21T00:00:00", "endDate": "2026-09-27T23:59:59"})],
+    )
+    assert api.get_check_ins(START, END) == [earlier, later]
 
 
 def test_workouts_empty_range_makes_no_call(api, mocked):

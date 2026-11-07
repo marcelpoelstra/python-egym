@@ -98,6 +98,15 @@ class Api:
             "netpulse", f"/np/exerciser/{self.exerciser_id}/challenges", {"grouping": "joinStatus"}
         )
 
+    def get_check_ins(self, start: datetime.date, end: datetime.date) -> list:
+        """Gym check-ins between start and end (both included), oldest first; the server returns them unsorted."""
+        result = self._connection.get(
+            "netpulse",
+            f"/np/exercisers/{self.exerciser_id}/check-ins/history",
+            {"startDate": f"{_day(start, self._zone)}T00:00:00", "endDate": f"{_day(end, self._zone)}T23:59:59"},
+        )
+        return sorted(result.get("checkIns") or [], key=lambda check_in: check_in["checkInDate"])
+
     def get_workouts(self, start: datetime.date, end: datetime.date) -> list:
         after = _utc_moment(start, self._zone)
         before = _utc_moment(end, self._zone, end=True)
@@ -202,6 +211,28 @@ class Api:
         return self._mwa(
             f"/measurements/v1.0/cardio-measurements-{_period(period)}-summary",
             {"shift": shift, "zoneId": self._zone.key},
+        )
+
+    def get_latest_flexibility_metrics(self, types: list[str] | None = None) -> list:
+        return self._mwa("/measurements/v1.0/flexibility-latest-metrics", None if types is None else {"types": types})
+
+    def get_flexibility_history(
+        self, types: list[str], start: datetime.date, end: datetime.date, granularity: str = "ONE_ITEM_PER_DAY"
+    ) -> list:
+        return self._mwa(
+            "/measurements/v1.0/flexibility-history",
+            {"types": types, "granularity": granularity, **self._between(start, end)},
+        )
+
+    def get_latest_squat_metrics(self) -> dict:
+        return self._mwa("/measurements/v1.0/squat-latest-metrics", {"locale": self._locale, "zoneId": self._zone.key})
+
+    def get_squat_history(
+        self, start: datetime.date, end: datetime.date, granularity: str = "ONE_ITEM_PER_DAY"
+    ) -> dict:
+        return self._mwa(
+            "/measurements/v1.0/squat-history",
+            {"granularity": granularity, "locale": self._locale, **self._between(start, end)},
         )
 
     def get_strength_measurements(

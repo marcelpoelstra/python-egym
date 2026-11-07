@@ -63,6 +63,7 @@ The connector finds your gym from your email address, logs in, and renews the se
 | `get_gyms()` | Gyms of your gym brand |
 | `get_challenges()` | Challenges, grouped into joined and unjoined |
 | `get_workouts(start, end)` | Workouts with their exercises and sets, `end` included; long ranges are fetched in 30-day windows |
+| `get_check_ins(start, end)` | Gym check-ins, oldest first; `duration` is only set if the gym reports check-outs |
 | `get_available_plans()` | Training plans available at your gym; your own have `type` `USER_TRAINING_PLAN`. Their sets can show the values last trained instead of the stored ones |
 | `get_plan(plan_id)` | One plan with its exercises (`plannedExercises`) and stored sets |
 | `create_personal_plan(name, exercises)` | Creates an own plan; the API returns no id, find it with `get_available_plans()` |
@@ -77,6 +78,10 @@ The connector finds your gym from your email address, logs in, and renews the se
 | `get_body_measurements(types, start, end)` | Body measurements, grouped per measurement |
 | `get_cardio_measurements(metric, start, end)` | Resting heart rate, VO2max or blood pressure history |
 | `get_cardio_summary(period, shift=0)` | Cardio summary per month or year |
+| `get_latest_flexibility_metrics(types=None)` | Latest flexibility values per joint and side (`…_DEGREE`, `…_NORMALIZED`, `…_ZERO_CENTERED_SCORE`) |
+| `get_flexibility_history(types, start, end, granularity="ONE_ITEM_PER_DAY")` | History of the given flexibility metrics |
+| `get_latest_squat_metrics()` | Latest squat scan: depth, back and shoulder angle |
+| `get_squat_history(start, end, granularity="ONE_ITEM_PER_DAY")` | All squat scans in the range |
 | `get_strength_measurements(start, end, activity_id=None)` | Strength measurements; each item's `activity.activityId` is the id to filter on |
 | `get_latest_strength_metrics(activity_ids=None)` | Latest strength results per activity, optionally for the given activity ids |
 | `get_muscle_imbalances()` | Muscle imbalance analysis |
