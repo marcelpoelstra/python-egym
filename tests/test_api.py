@@ -59,6 +59,12 @@ MWA_CASES = [
         "/workouts/v1.1/available-plans",
         {"gymLocationId": GYM_ID, "measurementSystem": "METRIC", "locale": "en-GB"},
     ),
+    (
+        lambda api: api.get_plan(42),
+        "/workouts/v1.0/plans/42",
+        {"gymLocationId": GYM_ID, "locale": "en-GB", "measurementSystem": "METRIC"},
+    ),
+    (lambda api: api.get_activities(), "/workouts/v1.0/activities", {"gymLocationId": GYM_ID, "locale": "en-GB"}),
     (lambda api: api.get_favourite_activities(), "/workouts/v2.0/favourite-activities", {"gymLocationId": GYM_ID}),
     (lambda api: api.get_bio_age(), "/analysis/v1.0/bio-age", {"locale": "en-GB"}),
     (
@@ -97,6 +103,27 @@ MWA_CASES = [
         lambda api: api.get_cardio_summary("year", shift=2),
         "/measurements/v1.0/cardio-measurements-yearly-summary",
         {"shift": 2, "zoneId": ZONE},
+    ),
+    (lambda api: api.get_latest_flexibility_metrics(), "/measurements/v1.0/flexibility-latest-metrics", {}),
+    (
+        lambda api: api.get_latest_flexibility_metrics(TYPES),
+        "/measurements/v1.0/flexibility-latest-metrics",
+        {"types": TYPES},
+    ),
+    (
+        lambda api: api.get_flexibility_history(TYPES, START, END),
+        "/measurements/v1.0/flexibility-history",
+        {"types": TYPES, "granularity": "ONE_ITEM_PER_DAY", **DATES},
+    ),
+    (
+        lambda api: api.get_latest_squat_metrics(),
+        "/measurements/v1.0/squat-latest-metrics",
+        {"locale": "en-GB", "zoneId": ZONE},
+    ),
+    (
+        lambda api: api.get_squat_history(START, END),
+        "/measurements/v1.0/squat-history",
+        {"granularity": "ONE_ITEM_PER_DAY", "locale": "en-GB", **DATES},
     ),
     (lambda api: api.get_strength_measurements(START, END), "/measurements/v1.0/strength", DATES),
     (
@@ -142,6 +169,48 @@ def test_mwa_methods(api, mocked, call, path, params):
         ],
     )
     assert call(api) == [{"ok": True}]
+
+
+PLAN_EXERCISES = [{"activityId": 95, "sets": [{"setType": "REP_BASED", "numberOfReps": 8, "weight": 12.0}]}]
+PLAN_BODY = {"name": "Push", "exercises": PLAN_EXERCISES}
+
+PLAN_WRITE_CASES = [
+    (
+        lambda api: api.create_personal_plan("Push", PLAN_EXERCISES),
+        responses.POST,
+        "/workouts/v1.0/personal-plans",
+        {"measurementSystem": "METRIC", "gymLocationId": GYM_ID},
+        PLAN_BODY,
+        200,
+    ),
+    (
+        lambda api: api.update_personal_plan(42, "Push", PLAN_EXERCISES),
+        responses.POST,
+        "/workouts/v1.0/personal-plans/42",
+        {"measurementSystem": "METRIC"},
+        PLAN_BODY,
+        200,
+    ),
+    (lambda api: api.delete_personal_plan(42), responses.DELETE, "/workouts/v1.0/personal-plans/42", {}, None, 204),
+]
+
+
+@pytest.mark.parametrize("call, method, path, params, body, status", PLAN_WRITE_CASES)
+def test_personal_plan_writes(api, mocked, call, method, path, params, body, status):
+    add_token(mocked)
+    match = [matchers.query_param_matcher(params), matchers.header_matcher({"Authorization": "Bearer token-1"})]
+    if body is not None:
+        match.append(matchers.json_params_matcher(body))
+    mocked.add(method, f"{MWA_API_URL}{path}", status=status, match=match)
+    assert call(api) is None
+
+
+def test_personal_plan_write_error_raises_api_error(api, mocked):
+    add_token(mocked)
+    mocked.add(responses.DELETE, f"{MWA_API_URL}/workouts/v1.0/personal-plans/42", status=404, body="missing")
+    with pytest.raises(egym.ApiError) as error:
+        api.delete_personal_plan(42)
+    assert error.value.status_code == 404
 
 
 def test_attributes(api):
@@ -232,6 +301,18 @@ def test_workouts_split_into_30_day_windows(api, mocked):
         )
     workouts = api.get_workouts(datetime.date(2026, 1, 1), datetime.date(2026, 3, 15))
     assert workouts == [{"window": 1}, {"window": 2}, {"window": 3}]
+
+
+def test_check_ins_sorted_oldest_first(api, mocked):
+    later = {"checkInDate": "2026-09-27T17:00:00", "duration": None}
+    earlier = {"checkInDate": "2026-09-21T09:30:00", "duration": None}
+    mocked.add(
+        responses.GET,
+        f"{BASE_URL}/np/exercisers/{EXERCISER_ID}/check-ins/history",
+        json={"checkIns": [later, earlier]},
+        match=[matchers.query_param_matcher({"startDate": "2026-09-21T00:00:00", "endDate": "2026-09-27T23:59:59"})],
+    )
+    assert api.get_check_ins(START, END) == [earlier, later]
 
 
 def test_workouts_empty_range_makes_no_call(api, mocked):

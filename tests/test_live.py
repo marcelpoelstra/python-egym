@@ -151,6 +151,28 @@ def test_strength_full_history_and_filters(api):
     assert 0 < len(api.get_latest_strength_metrics(activity_ids)) <= len(latest)
 
 
+def test_check_ins(api):
+    check_ins = api.get_check_ins(TODAY - datetime.timedelta(days=365), TODAY)
+    assert all(has_keys(check_in, "checkInDate", "gymLocationName", "duration") for check_in in check_ins)
+    assert [check_in["checkInDate"] for check_in in check_ins] == sorted(c["checkInDate"] for c in check_ins)
+
+
+def test_flexibility_latest_and_history(api):
+    latest = api.get_latest_flexibility_metrics()
+    assert latest and all(has_keys(metric, "type", "value", "createdAt") for metric in latest)
+    types = sorted({metric["type"] for metric in latest})[:2]
+    assert {metric["type"] for metric in api.get_latest_flexibility_metrics(types)} == set(types)
+    history = api.get_flexibility_history(types, HISTORY_START, TODAY)
+    assert {entry["type"] for entry in history} == set(types)
+    assert all(has_keys(item, "value", "date") for entry in history for item in entry["history"])
+
+
+def test_squat_latest_and_history(api):
+    assert has_keys(api.get_latest_squat_metrics(), "completedAt", "squatDepth", "back", "shoulders")
+    history = api.get_squat_history(HISTORY_START, TODAY)["squatMeasurements"]
+    assert all(has_keys(item, "date", "squatDepth", "back", "shoulders") for item in history)
+
+
 def test_muscle_imbalances(api):
     assert has_keys(api.get_muscle_imbalances(), "muscleImbalances")
 
